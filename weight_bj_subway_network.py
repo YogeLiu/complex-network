@@ -9,6 +9,8 @@ import random
 import threading
 import copy
 
+Node_Number = 340
+
 def ReadWeightMatrix():
     data = xlrd.open_workbook(r'H:\LYC\中期\数据\L\weight_symmetric_matrix.xlsx')
     worksheet = data.sheets()[0]
@@ -136,17 +138,18 @@ def static_shortes_path_length(graph):
     return total / (graph.number_of_nodes() * (graph.number_of_nodes() - 1))
 
 # 计算全局效率
-def static_graph_efficiency(graph):
-    return nx.global_efficiency(graph)
-
-
-def attack(graph, attack_type='图规模'):
-    if attack_type == '图规模':
-        pass
-    elif attack_type== '最短路径长度':
-        pass
-    else: 
-        pass
+def weight_network_efficiency(graph):
+    max_shortest_length, max_weight_shortest_length = 54, 5740996
+    length_list = list(nx.all_pairs_dijkstra_path_length(graph))
+    total = 0.0
+    for i in range(len(length_list)):
+        length_map = length_list[i][1]
+        for path_length in length_map.values():
+            if path_length != 0:
+                path_length_normalization = round(path_length / max_weight_shortest_length * max_shortest_length)
+                if path_length_normalization != 0.0:
+                    total += 1/path_length_normalization
+    return total / Node_Number / (Node_Number - 1)
 
 # 抗毁性指标，最短路径长度
 def attack_graph_shortest_path_length(graph):
@@ -191,31 +194,14 @@ def attack_efficiency(graph):
     rets = list(range(4))
     for i in range(4):
         rets[i] = []
-    thread_list = []
      #随机攻击, 点介数, 边介数, 点强度
     nodes_list = [random_points(), static_between_centrality_point(graph), static_between_centrality_edge(graph), static_degree_intensity_point(graph)]
     for i in range(len(nodes_list)):
-        thread_list.append(threading.Thread(target=attack_efficiency_thread, args=(graphs[i], nodes_list[i], i, rets)))
-        # for node in nodes_list[i]:
-        #     ret = static_graph_efficiency(graphs[i])
-        #     rets[i].append(ret) 
-        #     graphs[i].remove_node(node)   
-
-    for thread in thread_list:
-        thread.start()
-    for thread in thread_list:
-        thread.join()
+       for node in nodes_list[i]:
+            ret = weight_network_efficiency(graphs[i])
+            rets[i].append(ret) 
+            graphs[i].remove_node(node)   
     return rets
-
-# 开启线程
-def attack_efficiency_thread(graph, nodes, index, ret_all):
-    rets = []
-    for i in range(len(nodes)):
-        ret = static_graph_efficiency(graph)
-        rets.append(ret)
-        graph.remove_node(nodes[i])
-    ret_all[index] = rets
-
 
 def draw(variales, ylabel):
     if len(variales) != 4:
