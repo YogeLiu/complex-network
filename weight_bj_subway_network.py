@@ -211,12 +211,9 @@ def attack_efficiency(graph):
 def attack_efficiency_thread(graph, nodes, index, ret_all):
     rets = []
     for i in range(len(nodes)):
-        print("ing")
         ret = static_graph_efficiency(graph)
         rets.append(ret)
         graph.remove_node(nodes[i])
-        if i % 50 == 0:
-            print("50")
     ret_all[index] = rets
 
 
